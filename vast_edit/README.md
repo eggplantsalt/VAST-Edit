@@ -63,13 +63,23 @@ python vast_edit/scripts/validate_manifest.py \
   --mode samples
 ```
 
-Create contact sheets for quick human inspection of rendered overlays:
+Create contact sheets for quick human inspection of rendered overlays. The
+script writes the standard overview plus a temporal multi-frame sheet for
+`temporal_cue_chain`, using renderer metadata such as `visible_frame_ranges`
+when available:
 
 ```bash
 python vast_edit/scripts/make_contact_sheet.py \
   --samples_jsonl vast_edit_outputs/pilot_v01/metadata/samples.jsonl \
   --output_dir vast_edit_outputs/pilot_v01/debug_artifacts
 ```
+
+Renderer v0.3 notes:
+
+- `spatial_text_cue` uses smaller style-aware overlays such as subtitles, sticky notes, poster labels, and screen labels.
+- `spatial_target_cue` benign and scrambled variants are counterfactual controls with comparable visual strength, not weak perturbations.
+- `temporal_cue_chain` records visible temporal segments so early, middle, and late cue states can be reviewed.
+- Procedurally generated pseudo-real videos are for engineering validation only and are not final paper-quality real video data.
 
 Export a model input manifest for a video editing method:
 

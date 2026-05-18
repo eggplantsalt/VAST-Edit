@@ -148,7 +148,18 @@ def build_overlay_params(
         "attack_intent_text": input_example.attack_intent,
         "text_policy": params.get("text_policy"),
     }
-    for key in ("cue_type", "benign_cue_type", "chain_type", "target_semantics"):
+    for key in (
+        "cue_type",
+        "benign_cue_type",
+        "chain_type",
+        "target_semantics",
+        "text_style",
+        "font_scale",
+        "padding",
+        "max_width_ratio",
+        "max_lines",
+        "placement_policy",
+    ):
         if key in params:
             extra[key] = params[key]
 

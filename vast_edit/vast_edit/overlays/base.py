@@ -53,7 +53,7 @@ def _copy_frame(frame: np.ndarray) -> np.ndarray:
     return frame.copy()
 
 
-def _wrap_text(text: str, max_chars: int = 32) -> List[str]:
+def _wrap_text(text: str, max_chars: int = 32, max_lines: int = 3) -> List[str]:
     words = str(text).split()
     if not words:
         return [""]
@@ -67,13 +67,17 @@ def _wrap_text(text: str, max_chars: int = 32) -> List[str]:
         else:
             if current:
                 lines.append(current)
+                if len(lines) >= max_lines:
+                    return lines
             while len(word) > max_chars:
                 lines.append(word[:max_chars])
                 word = word[max_chars:]
+                if len(lines) >= max_lines:
+                    return lines
             current = word
     if current:
         lines.append(current)
-    return lines
+    return lines[:max_lines]
 
 
 def _text_origin_for_anchor(
@@ -113,6 +117,12 @@ def draw_text_box(
     padding: int = 8,
     color: Color = (255, 255, 255),
     bg_color: Color = (0, 0, 0),
+    border_color: Color | None = None,
+    border_thickness: int = 0,
+    max_width_ratio: float = 0.76,
+    max_lines: int = 3,
+    line_spacing: float = 1.35,
+    corner_radius: int = 0,
 ) -> np.ndarray:
     """Draw a wrapped text box on an RGB frame."""
 
@@ -120,21 +130,34 @@ def draw_text_box(
     height, width = output.shape[:2]
     anchor = resolve_position(position, width, height)
     font = cv2.FONT_HERSHEY_SIMPLEX
-    max_chars = max(12, min(48, width // 16))
-    lines = _wrap_text(text, max_chars=max_chars)
+    max_width = max(48, int(width * max(0.25, min(float(max_width_ratio), 0.96))))
+    avg_char_width = max(5, int(font_scale * 11))
+    max_chars = max(8, min(56, max_width // avg_char_width))
+    lines = _wrap_text(text, max_chars=max_chars, max_lines=max_lines)
 
     line_sizes = [cv2.getTextSize(line, font, font_scale, thickness)[0] for line in lines]
-    line_height = int(max((size[1] for size in line_sizes), default=16) * 1.45)
+    line_height = int(max((size[1] for size in line_sizes), default=16) * line_spacing)
     text_width = max((size[0] for size in line_sizes), default=1)
-    box_width = min(width, text_width + padding * 2)
+    box_width = min(width, max(1, min(max_width, text_width + padding * 2)))
     box_height = min(height, line_height * len(lines) + padding * 2)
     left, top, right, bottom = _text_origin_for_anchor(
         anchor, box_width, box_height, width, height, padding
     )
 
     overlay = output.copy()
-    cv2.rectangle(overlay, (left, top), (right, bottom), bg_color, thickness=-1)
+    radius = max(0, min(int(corner_radius), min(box_width, box_height) // 2))
+    if radius:
+        cv2.rectangle(overlay, (left + radius, top), (right - radius, bottom), bg_color, thickness=-1)
+        cv2.rectangle(overlay, (left, top + radius), (right, bottom - radius), bg_color, thickness=-1)
+        cv2.circle(overlay, (left + radius, top + radius), radius, bg_color, thickness=-1)
+        cv2.circle(overlay, (right - radius, top + radius), radius, bg_color, thickness=-1)
+        cv2.circle(overlay, (left + radius, bottom - radius), radius, bg_color, thickness=-1)
+        cv2.circle(overlay, (right - radius, bottom - radius), radius, bg_color, thickness=-1)
+    else:
+        cv2.rectangle(overlay, (left, top), (right, bottom), bg_color, thickness=-1)
     output = blend_overlay(output, overlay, alpha)
+    if border_color is not None and border_thickness > 0:
+        cv2.rectangle(output, (left, top), (right, bottom), border_color, thickness=border_thickness)
 
     baseline_y = top + padding + line_height - padding // 2
     for line in lines:

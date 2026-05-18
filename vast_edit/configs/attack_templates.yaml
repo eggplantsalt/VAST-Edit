@@ -13,13 +13,16 @@ spatial_text_cue:
         clean: {}
         benign:
           text_policy: benign
+          text_style: subtitle
         attack:
           text_policy: default_text
+          text_style: subtitle
         scrambled:
           text_policy: scramble_default_text
+          text_style: subtitle
       default_position: bottom_center
-      default_color: "#ff3333"
-      default_alpha: 0.78
+      default_color: "#f5f5ee"
+      default_alpha: 0.62
       schedule:
         start: first_frame
         end: last_frame
@@ -31,12 +34,15 @@ spatial_text_cue:
         clean: {}
         benign:
           text_policy: benign
+          text_style: sticky_note
         attack:
           text_policy: default_text
+          text_style: sticky_note
         scrambled:
           text_policy: scramble_default_text
+          text_style: sticky_note
       default_position: top_left
-      default_color: "#ffff00"
+      default_color: "#2a261c"
       default_alpha: 0.72
       schedule:
         start: frame_10_percent
@@ -49,13 +55,16 @@ spatial_text_cue:
         clean: {}
         benign:
           text_policy: benign
+          text_style: screen_label
         attack:
           text_policy: default_text
+          text_style: screen_label
         scrambled:
           text_policy: scramble_default_text
+          text_style: screen_label
       default_position: top_center
-      default_color: "#ffffff"
-      default_alpha: 0.80
+      default_color: "#e1eeeb"
+      default_alpha: 0.66
       schedule:
         start: first_frame
         end: last_frame
@@ -79,6 +88,7 @@ spatial_target_cue:
           target_semantics: randomized_region
       default_position: center
       default_color: "#ff3333"
+      benign_color: "#ff3333"
       default_alpha: 0.85
       schedule:
         start: frame_10_percent
@@ -100,6 +110,7 @@ spatial_target_cue:
           target_semantics: randomized_region
       default_position: center
       default_color: "#00ff66"
+      benign_color: "#00ff66"
       default_alpha: 0.82
       schedule:
         start: frame_10_percent
@@ -121,6 +132,7 @@ spatial_target_cue:
           target_semantics: randomized_region
       default_position: center
       default_color: "#00ccff"
+      benign_color: "#00ccff"
       default_alpha: 0.45
       schedule:
         start: first_frame
@@ -144,8 +156,9 @@ temporal_cue_chain:
           chain_type: fragmented_text
           text_policy: scramble_default_text
       default_position: top_center
-      default_color: "#ffff00"
-      default_alpha: 0.86
+      default_color: "#f2eecb"
+      benign_color: "#f2eecb"
+      default_alpha: 0.72
       schedule:
         start: first_frame
         end: last_frame
@@ -167,7 +180,8 @@ temporal_cue_chain:
           target_semantics: broken_binding
       default_position: center
       default_color: "#ff3333"
-      default_alpha: 0.82
+      benign_color: "#ff3333"
+      default_alpha: 0.76
       schedule:
         start: first_frame
         end: last_frame
@@ -189,7 +203,8 @@ temporal_cue_chain:
           target_semantics: reversed_or_scrambled_path
       default_position: moving_path
       default_color: "#ffcc00"
-      default_alpha: 0.88
+      benign_color: "#ffcc00"
+      default_alpha: 0.76
       schedule:
         start: first_frame
         end: last_frame

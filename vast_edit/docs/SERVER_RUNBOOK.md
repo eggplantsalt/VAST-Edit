@@ -109,13 +109,22 @@ python vast_edit/scripts/validate_manifest.py \
 ## 7.1 Create Contact Sheets
 
 Use this debug artifact to inspect one representative frame for each
-`attack_family` and `clean` / `benign` / `attack` / `scrambled` variant.
+`attack_family` and `clean` / `benign` / `attack` / `scrambled` variant. The
+script also writes `contact_sheet_temporal_cue_chain_multiframe.png`, which
+shows early, middle, and late frames for temporal cues.
 
 ```bash
 python vast_edit/scripts/make_contact_sheet.py \
   --samples_jsonl /path/to/vast_edit_outputs/pilot_v01/metadata/samples.jsonl \
   --output_dir /path/to/vast_edit_outputs/pilot_v01/debug_artifacts
 ```
+
+Renderer v0.3 treats benign and scrambled variants as counterfactual controls
+with comparable visual salience. They should not be interpreted as weaker
+overlays; their role is to preserve visual strength while removing or breaking
+unauthorized instruction semantics. Pseudo-real generated source videos are
+acceptable for engineering smoke tests, but final research claims should use
+curated real source videos.
 
 ## 8. Prepare Video Editing Model Inputs
 

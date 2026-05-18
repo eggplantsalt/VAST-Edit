@@ -45,7 +45,7 @@ def _segments(num_frames: int, count: int) -> List[Tuple[int, int]]:
     return segments
 
 
-def _text_fragments(text: str, min_parts: int = 2, max_parts: int = 5) -> List[str]:
+def _text_fragments(text: str, min_parts: int = 3, max_parts: int = 4) -> List[str]:
     words = str(text).split()
     if len(words) >= min_parts:
         count = max(min_parts, min(max_parts, len(words)))
@@ -95,6 +95,7 @@ def _render_fragmented_text(
         rng = random.Random(seed)
         rng.shuffle(fragments)
 
+    fragments = fragments[: max(2, min(4, len(fragments)))]
     segments = _segments(len(frames), len(fragments))
     output = [frame.copy() for frame in frames]
     positions = ["top_left", "top_center", "top_right", "bottom_center", "center"]
@@ -106,11 +107,22 @@ def _render_fragmented_text(
                 output[frame_index],
                 fragment,
                 position,
-                font_scale=0.8,
+                font_scale=0.46,
                 alpha=alpha,
+                padding=5,
                 color=color,
+                bg_color=(28, 34, 38),
+                max_width_ratio=0.46,
+                max_lines=2,
+                border_color=(95, 112, 118),
+                border_thickness=1,
             )
-    return output, {"fragments": fragments, "segments": segments}
+    return output, {
+        "fragments": fragments,
+        "segments": segments,
+        "temporal_segments": segments,
+        "visible_frame_ranges": segments,
+    }
 
 
 def _render_progressive_target_binding(
@@ -125,19 +137,44 @@ def _render_progressive_target_binding(
 
     height, width = frames[0].shape[:2]
     top_left, bottom_right = _default_box(width, height)
+    if variant == "benign":
+        box_w = bottom_right[0] - top_left[0]
+        box_h = bottom_right[1] - top_left[1]
+        top_left = (max(8, width // 12), max(8, height // 12))
+        bottom_right = (top_left[0] + box_w, top_left[1] + box_h)
+    elif variant == "scrambled":
+        top_left = (max(8, width * 2 // 3), max(8, height // 8))
+        bottom_right = (min(width - 8, top_left[0] + width // 5), min(height - 8, top_left[1] + height // 5))
     center = (width // 2, height // 2)
     midpoint = max(1, len(frames) // 2)
     output = [frame.copy() for frame in frames]
 
     for index in range(0, midpoint):
-        if variant == "benign":
-            output[index] = draw_circle(output[index], (width // 10, height // 10), 8, color, alpha=alpha)
-        else:
-            output[index] = draw_box(output[index], top_left, bottom_right, color, alpha=alpha)
+        output[index] = draw_box(output[index], top_left, bottom_right, color, thickness=4, alpha=alpha)
     for index in range(midpoint, len(frames)):
-        output[index] = draw_text_box(output[index], text, "bottom_center", alpha=alpha, color=color)
+        output[index] = draw_text_box(
+            output[index],
+            text,
+            "bottom_center",
+            font_scale=0.46,
+            padding=5,
+            alpha=alpha,
+            color=color,
+            bg_color=(28, 34, 38),
+            max_width_ratio=0.56,
+            max_lines=2,
+            border_color=(95, 112, 118),
+            border_thickness=1,
+        )
 
-    return output, {"target_box": [top_left, bottom_right], "target_center": center, "split": midpoint}
+    ranges = [(0, midpoint - 1), (midpoint, len(frames) - 1)]
+    return output, {
+        "target_box": [top_left, bottom_right],
+        "target_center": center,
+        "split": midpoint,
+        "temporal_segments": ranges,
+        "visible_frame_ranges": ranges,
+    }
 
 
 def _render_motion_trajectory(
@@ -158,13 +195,27 @@ def _render_motion_trajectory(
     for index, (start, end) in enumerate(segments):
         visible_points = points[: index + 1]
         for frame_index in range(start, end + 1):
-            if variant == "benign":
-                output[frame_index] = draw_circle(
-                    output[frame_index], visible_points[-1], 5, color, thickness=2, alpha=alpha
-                )
-            else:
-                output[frame_index] = draw_polyline(output[frame_index], visible_points, color, alpha=alpha)
-    return output, {"trajectory": points, "segments": segments}
+            output[frame_index] = draw_polyline(
+                output[frame_index],
+                visible_points,
+                color,
+                thickness=4,
+                alpha=alpha,
+            )
+            output[frame_index] = draw_circle(
+                output[frame_index],
+                visible_points[-1],
+                5,
+                color,
+                thickness=2,
+                alpha=min(1.0, alpha + 0.08),
+            )
+    return output, {
+        "trajectory": points,
+        "segments": segments,
+        "temporal_segments": segments,
+        "visible_frame_ranges": segments,
+    }
 
 
 def render_temporal_cue_chain(
@@ -203,8 +254,8 @@ def render_temporal_cue_chain(
 
     color = _parse_color(params.get("color"), (255, 0, 0))
     if variant == "benign":
-        color = _parse_color(params.get("benign_color"), (255, 255, 255))
-    alpha = float(params.get("alpha") if params.get("alpha") is not None else 0.85)
+        color = _parse_color(params.get("benign_color"), color)
+    alpha = float(params.get("alpha") if params.get("alpha") is not None else 0.72)
 
     if chain_type == "progressive_target_binding":
         new_frames, details = _render_progressive_target_binding(frames, text, variant, color, alpha)
@@ -214,6 +265,14 @@ def render_temporal_cue_chain(
         fragments = _text_fragments(text)
         new_frames, details = _render_fragmented_text(frames, fragments, variant, color, alpha, seed)
 
-    resolved.update({"chain_type": chain_type, "text": text, "color": color, "alpha": alpha})
+    resolved.update(
+        {
+            "chain_type": chain_type,
+            "text": text,
+            "color": color,
+            "alpha": alpha,
+            "temporal_policy": f"{chain_type}_multi_segment",
+        }
+    )
     resolved.update(details)
     return new_frames, resolved

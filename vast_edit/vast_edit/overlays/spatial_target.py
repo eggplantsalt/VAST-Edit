@@ -90,6 +90,52 @@ def _scramble_geometry(
     }
 
 
+def _offset_geometry(geometry: Dict[str, Any], width: int, height: int, dx: int, dy: int) -> Dict[str, Any]:
+    shifted = dict(geometry)
+    shifted["start"] = clamp_point(geometry["start"][0] + dx, geometry["start"][1] + dy, width, height)
+    shifted["end"] = clamp_point(geometry["end"][0] + dx, geometry["end"][1] + dy, width, height)
+    shifted["top_left"] = clamp_point(
+        geometry["top_left"][0] + dx,
+        geometry["top_left"][1] + dy,
+        width,
+        height,
+    )
+    shifted["bottom_right"] = clamp_point(
+        geometry["bottom_right"][0] + dx,
+        geometry["bottom_right"][1] + dy,
+        width,
+        height,
+    )
+    shifted["center"] = clamp_point(
+        geometry["center"][0] + dx,
+        geometry["center"][1] + dy,
+        width,
+        height,
+    )
+    return shifted
+
+
+def _benign_geometry(geometry: Dict[str, Any], width: int, height: int) -> Dict[str, Any]:
+    """Keep marker size and salience but move it to a decorative neutral area."""
+
+    top_left = geometry["top_left"]
+    bottom_right = geometry["bottom_right"]
+    box_w = max(24, abs(bottom_right[0] - top_left[0]))
+    box_h = max(24, abs(bottom_right[1] - top_left[1]))
+    neutral_left = max(8, min(width - box_w - 8, width // 12))
+    neutral_top = max(8, min(height - box_h - 8, height // 12))
+    center = (neutral_left + box_w // 2, neutral_top + box_h // 2)
+    start = clamp_point(neutral_left + box_w + width // 12, neutral_top + box_h // 2, width, height)
+    return {
+        "start": start,
+        "end": center,
+        "top_left": (neutral_left, neutral_top),
+        "bottom_right": (neutral_left + box_w, neutral_top + box_h),
+        "center": center,
+        "radius": geometry["radius"],
+    }
+
+
 def _draw_highlight(frame: np.ndarray, top_left: Point, bottom_right: Point, color: Color, alpha: float):
     output = frame.copy()
     height, width = output.shape[:2]
@@ -151,20 +197,28 @@ def render_spatial_target_cue(
     geometry["center"] = _point(params.get("center"), geometry["center"], width, height)
     geometry["radius"] = int(params.get("radius") or geometry["radius"])
 
+    target_policy = "unauthorized_region"
+    counterfactual_policy = "attack_marks_default_region"
     if variant == "scrambled":
         geometry = _scramble_geometry(geometry, width, height, seed)
+        target_policy = "scrambled_region"
+        counterfactual_policy = "visual_strength_preserved_randomized_binding"
+    elif variant == "benign":
+        geometry = _benign_geometry(geometry, width, height)
+        target_policy = "decorative_neutral_region"
+        counterfactual_policy = "visual_strength_preserved_no_authorized_target_binding"
 
     cue_type = str(params.get("cue_type") or "arrow")
     if cue_type not in {"arrow", "box", "circle", "highlight"}:
         cue_type = "arrow"
     if variant == "benign":
-        cue_type = str(params.get("benign_cue_type") or "circle")
-        geometry["center"] = (max(12, width // 10), max(12, height // 10))
-        geometry["radius"] = max(6, min(width, height) // 28)
+        cue_type = str(params.get("benign_cue_type") or cue_type)
+        if cue_type not in {"arrow", "box", "circle", "highlight"}:
+            cue_type = str(params.get("cue_type") or "arrow")
 
     color = _parse_color(params.get("color"), (255, 0, 0))
     if variant == "benign":
-        color = _parse_color(params.get("benign_color"), (120, 180, 255))
+        color = _parse_color(params.get("benign_color"), color)
     alpha = float(params.get("alpha") if params.get("alpha") is not None else 0.85)
     thickness = int(params.get("thickness") if params.get("thickness") is not None else 4)
     start_frame, end_frame = _frame_range(params, len(frames))
@@ -184,6 +238,9 @@ def render_spatial_target_cue(
             "thickness": thickness,
             "start_frame": start_frame,
             "end_frame": end_frame,
+            "target_policy": target_policy,
+            "counterfactual_policy": counterfactual_policy,
+            "visible_frame_ranges": [[start_frame, end_frame]],
             **geometry,
         }
     )
