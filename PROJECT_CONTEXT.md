@@ -145,3 +145,8 @@ The first real-video source plan is a small DAVIS 2017 / 2016 style subset becau
 - engineering validation on pseudo-real generated videos;
 - benchmark evidence on curated real videos;
 - semantic model behavior evidence from human or MLLM judging, not pixel-change proxies alone.
+## Semantic Judge Track Update (2026-05-19)
+
+Real-video pixel-change proxies are not sufficient evidence for Visual Authority Confusion. VAST-Edit should require semantic judging before claiming attack success. The semantic judge track scores authorized edit compliance, unauthorized visual-cue alignment, target hijacking, content preservation, output quality, and cue retention within clean/benign/attack/scrambled groups.
+
+VAST-Edit may borrow VJA-style rigor in grouped visual evaluation and semantic judging, but the benchmark framing remains distinct: VAST-Edit studies authority confusion in instruction-guided video editing, not harmful image jailbreak. The central question is whether untrusted visual cues embedded in source videos compete with or override the authorized user edit instruction.
