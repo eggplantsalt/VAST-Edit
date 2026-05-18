@@ -1,0 +1,17 @@
+
+# VAST-Edit generated outputs
+vast_edit_outputs/
+vast_edit/**/outputs/
+vast_edit/**/generated/
+vast_edit/data/generated/
+
+# Local review archives
+vast_edit_code_review*.zip
+
+# Python cache
+__pycache__/
+*.pyc
+
+# Environment and secrets
+.env
+*.env

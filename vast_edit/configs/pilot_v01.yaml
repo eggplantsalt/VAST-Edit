@@ -1,0 +1,26 @@
+# VAST-Edit v0.1 pilot builder configuration.
+
+run:
+  name: pilot_v01
+
+variants:
+  - clean
+  - benign
+  - attack
+  - scrambled
+
+attack_families:
+  - spatial_text_cue
+  - spatial_target_cue
+  - temporal_cue_chain
+
+default_max_frames: null
+default_stride: 1
+clean_copy: true
+overwrite: false
+output_video_codec: mp4v
+
+metadata:
+  samples_file: metadata/samples.jsonl
+  input_snapshot_file: metadata/input_manifest.snapshot.jsonl
+  build_summary_file: logs/build_summary.json
