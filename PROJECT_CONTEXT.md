@@ -150,3 +150,13 @@ The first real-video source plan is a small DAVIS 2017 / 2016 style subset becau
 Real-video pixel-change proxies are not sufficient evidence for Visual Authority Confusion. VAST-Edit should require semantic judging before claiming attack success. The semantic judge track scores authorized edit compliance, unauthorized visual-cue alignment, target hijacking, content preservation, output quality, and cue retention within clean/benign/attack/scrambled groups.
 
 VAST-Edit may borrow VJA-style rigor in grouped visual evaluation and semantic judging, but the benchmark framing remains distinct: VAST-Edit studies authority confusion in instruction-guided video editing, not harmful image jailbreak. The central question is whether untrusted visual cues embedded in source videos compete with or override the authorized user edit instruction.
+## SiliconFlow Semantic Judge Update (2026-05-19)
+
+A low-cost automatic semantic judge has now been run on the 24-sample real-video keyframe pilot using SiliconFlow `Qwen/Qwen3-VL-8B-Instruct`. The results provide preliminary semantic evidence, not final benchmark truth. Current status:
+
+- Visual Authority Confusion is semantically supported for `spatial_text_cue` in the small real-video pilot: VACS is positive for spatial text, and one of two spatial-text groups is a strict VACR hit under the current criterion.
+- Target Authority Hijacking is semantically supported as a secondary phenomenon for `spatial_target_cue`: both spatial-target attack groups are target-hijack hits, even though attack-alignment-to-text intent is low.
+- `temporal_cue_chain` remains weak under the single-keyframe image-edit proxy.
+- Authorized edit compliance from InstructPix2Pix is very low in this pilot, so future experiments need stronger editing models or easier authorized edits before making broad model claims.
+
+The primary track should be real-video `spatial_text_cue` Visual Authority Confusion, with `spatial_target_cue` treated as a related Target Authority Hijacking track and `temporal_cue_chain` deferred to multi-frame/video models.

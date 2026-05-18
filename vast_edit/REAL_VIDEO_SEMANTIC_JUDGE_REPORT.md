@@ -238,3 +238,119 @@ Updated:
 - `PROJECT_CONTEXT.md`
 
 Generated review cards, HTML, manifests, CSVs, and semantic output files are kept on the data disk and are not committed.
+## SiliconFlow MLLM Judge Results
+
+Automatic semantic judging was run after the initial human-package stage.
+
+Judge route:
+
+```text
+provider=siliconflow
+model=Qwen/Qwen3-VL-8B-Instruct
+base_url=https://api.siliconflow.cn/v1
+```
+
+The API key was loaded from the server-side secret env file and was not printed or committed. The runner uses OpenAI-compatible SDK calls and sends multimodal messages with the current input keyframe, current edited output, and the grouped review card for comparative context.
+
+Implemented runner:
+
+```text
+vast_edit/scripts/run_semantic_judge.py
+```
+
+Smoke status:
+
+```text
+1-sample smoke passed
+image input accepted
+strict JSON parsed successfully
+```
+
+One initial smoke attempt failed because the model name loaded from the env file included a trailing carriage return. The runner now strips env-derived model/base URL strings; rerunning with explicit `Qwen/Qwen3-VL-8B-Instruct` passed.
+
+Full run:
+
+```text
+judge tasks=24
+success=24
+failure=0
+output=/opt/data/private/zy_data/VAST-Edit/outputs/real_video_pilot_v01/semantic_judge_v01/judge_results.jsonl
+```
+
+Analysis outputs:
+
+```text
+/opt/data/private/zy_data/VAST-Edit/outputs/real_video_pilot_v01/semantic_judge_v01/semantic_summary.json
+/opt/data/private/zy_data/VAST-Edit/outputs/real_video_pilot_v01/semantic_judge_v01/semantic_per_sample.csv
+/opt/data/private/zy_data/VAST-Edit/outputs/real_video_pilot_v01/semantic_judge_v01/semantic_per_family.csv
+/opt/data/private/zy_data/VAST-Edit/outputs/real_video_pilot_v01/semantic_judge_v01/semantic_per_variant.csv
+/opt/data/private/zy_data/VAST-Edit/outputs/real_video_pilot_v01/semantic_judge_v01/semantic_group_delta.csv
+/opt/data/private/zy_data/VAST-Edit/outputs/real_video_pilot_v01/semantic_judge_v01/semantic_family_vacs.csv
+```
+
+### Overall Semantic Metrics
+
+```text
+ACR  = 0.0833
+VACR = 0.1667
+THR  = 0.3333
+```
+
+Mean by variant:
+
+| variant | authorized_edit | attack_alignment | target_hijack | preservation | quality | cue_retention |
+| --- | ---: | ---: | ---: | ---: | ---: | ---: |
+| attack | 0.00 | 1.00 | 1.00 | 2.67 | 2.83 | 2.00 |
+| benign | 0.50 | 0.67 | 0.00 | 3.00 | 3.00 | 1.33 |
+| clean | 0.50 | 0.50 | 0.00 | 3.00 | 3.00 | 0.67 |
+| scrambled | 0.00 | 0.17 | 0.00 | 2.50 | 2.33 | 0.83 |
+
+Deltas:
+
+```text
+attack_alignment_attack - benign = +0.33
+attack_alignment_attack - scrambled = +0.83
+target_hijack_attack - benign = +1.00
+target_hijack_attack - scrambled = +1.00
+```
+
+### Per-Family Conclusions
+
+Family VACS:
+
+| attack_family | VACS | attack AAS | benign AAS | scrambled AAS |
+| --- | ---: | ---: | ---: | ---: |
+| spatial_text_cue | 1.00 | 3.00 | 2.00 | 0.50 |
+| spatial_target_cue | 0.00 | 0.00 | 0.00 | 0.00 |
+| temporal_cue_chain | 0.00 | 0.00 | 0.00 | 0.00 |
+
+Strict VACR hits:
+
+```text
+spatial_text_cue: 1 / 2 groups
+spatial_target_cue: 0 / 2 groups
+temporal_cue_chain: 0 / 2 groups
+```
+
+Target hijack hits:
+
+```text
+spatial_target_cue: 2 / 2 groups
+total THR: 2 / 6 groups = 0.3333
+```
+
+The semantic judge supports `spatial_text_cue` as the strongest Visual Authority Confusion track. It also suggests `spatial_target_cue` is better interpreted as Target Authority Hijacking rather than attack-intent semantic alignment. `temporal_cue_chain` remains weak under the single-keyframe proxy.
+
+### Interpretation
+
+The SiliconFlow judge partly confirms the pixel-proxy trend but makes it more specific. Pixel proxy said attack variants change more, especially spatial text. Semantic judging says the clearest unauthorized semantic alignment occurs in `spatial_text_cue`, while `spatial_target_cue` manifests as wrong-target editing rather than textual attack-intent following.
+
+Visual Authority Confusion is therefore semantically supported in this small pilot, but narrowly: the evidence is strongest for source-frame text cues. Target Authority Hijacking is also supported as a secondary phenomenon. The current results do not support temporal authority leakage under a single keyframe image-edit proxy.
+
+A major caveat is low authorized compliance: ACR is only 0.0833. InstructPix2Pix often failed to perform the authorized edit at all, so these results should be treated as a low-cost proof of concept rather than final benchmark evidence.
+
+### Limitations Of Qwen3-VL-8B Judge
+
+`Qwen/Qwen3-VL-8B-Instruct` is a low-cost judge. It can provide useful triage, but its scores should be spot-checked by humans or a stronger VLM before paper claims. Some judgments may be sensitive to the review-card layout and to whether the model correctly localizes subtle color/object edits.
+
+Recommended next step: human spot-check the six high-resolution review cards and either validate the 24 SiliconFlow labels or rerun the same tasks with a stronger judge model.
