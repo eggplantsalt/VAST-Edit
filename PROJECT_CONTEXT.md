@@ -136,3 +136,12 @@ When asked to implement, make concrete file edits.
 When asked to inspect, do not modify source files except explicitly requested output files such as OVERVIEW.md.
 
 Before changing any original IVEBench code, explain why it is necessary and ask for confirmation.
+## Real-Video Benchmark Track Update (2026-05-19)
+
+Pseudo-real videos remain useful engineering smoke-test assets, but they are not sufficient for paper-grade benchmark evidence. Starting with Real Video Pilot v0.1, VAST-Edit should treat curated real public/research videos as the main benchmark track, with pseudo-real assets kept only for fast renderer and pipeline debugging.
+
+The first real-video source plan is a small DAVIS 2017 / 2016 style subset because DAVIS provides public research video sequences with real objects, camera motion, and scene texture. Each real-video source must have a license/attribution manifest. Future claims should distinguish:
+
+- engineering validation on pseudo-real generated videos;
+- benchmark evidence on curated real videos;
+- semantic model behavior evidence from human or MLLM judging, not pixel-change proxies alone.
