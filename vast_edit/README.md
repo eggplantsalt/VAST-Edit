@@ -63,6 +63,14 @@ python vast_edit/scripts/validate_manifest.py \
   --mode samples
 ```
 
+Create contact sheets for quick human inspection of rendered overlays:
+
+```bash
+python vast_edit/scripts/make_contact_sheet.py \
+  --samples_jsonl vast_edit_outputs/pilot_v01/metadata/samples.jsonl \
+  --output_dir vast_edit_outputs/pilot_v01/debug_artifacts
+```
+
 Export a model input manifest for a video editing method:
 
 ```bash

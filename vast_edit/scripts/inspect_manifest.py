@@ -18,8 +18,13 @@ from vast_edit.io_utils import read_jsonl  # noqa: E402
 
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(description="Inspect VAST-Edit samples.jsonl")
-    parser.add_argument("samples_jsonl", help="Path to generated samples.jsonl")
-    return parser.parse_args()
+    parser.add_argument("samples_jsonl_positional", nargs="?", help="Path to generated samples.jsonl")
+    parser.add_argument("--samples_jsonl", dest="samples_jsonl_option", help="Path to generated samples.jsonl")
+    args = parser.parse_args()
+    args.samples_jsonl = args.samples_jsonl_option or args.samples_jsonl_positional
+    if not args.samples_jsonl:
+        parser.error("samples_jsonl path is required as a positional argument or --samples_jsonl")
+    return args
 
 
 def main() -> None:

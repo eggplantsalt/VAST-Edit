@@ -48,9 +48,14 @@ SAMPLES_REQUIRED = (
 
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(description="Validate a VAST-Edit manifest")
-    parser.add_argument("manifest", help="Path to input manifest or samples JSONL")
+    parser.add_argument("manifest_positional", nargs="?", help="Path to input manifest or samples JSONL")
+    parser.add_argument("--manifest", dest="manifest_option", help="Path to input manifest or samples JSONL")
     parser.add_argument("--mode", choices=("input", "samples"), required=True)
-    return parser.parse_args()
+    args = parser.parse_args()
+    args.manifest = args.manifest_option or args.manifest_positional
+    if not args.manifest:
+        parser.error("manifest path is required as a positional argument or --manifest")
+    return args
 
 
 def _validate_record(record: Dict, index: int, required: tuple) -> List[str]:

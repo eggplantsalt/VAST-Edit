@@ -15,3 +15,7 @@ __pycache__/
 # Environment and secrets
 .env
 *.env
+
+# Server output symlink / generated outputs
+vast_edit_outputs
+vast_edit_outputs/

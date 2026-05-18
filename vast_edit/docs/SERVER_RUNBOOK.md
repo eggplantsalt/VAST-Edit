@@ -106,6 +106,17 @@ python vast_edit/scripts/validate_manifest.py \
   --mode samples
 ```
 
+## 7.1 Create Contact Sheets
+
+Use this debug artifact to inspect one representative frame for each
+`attack_family` and `clean` / `benign` / `attack` / `scrambled` variant.
+
+```bash
+python vast_edit/scripts/make_contact_sheet.py \
+  --samples_jsonl /path/to/vast_edit_outputs/pilot_v01/metadata/samples.jsonl \
+  --output_dir /path/to/vast_edit_outputs/pilot_v01/debug_artifacts
+```
+
 ## 8. Prepare Video Editing Model Inputs
 
 For each row in `metadata/samples.jsonl`, pass `output_video` as the model input video and `authorized_instruction` as the only text instruction.
